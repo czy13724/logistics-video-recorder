@@ -88,7 +88,9 @@ def setup_qt_environment():
                     os.environ['DYLD_LIBRARY_PATH'] = qt_lib_path
 
 # 立即设置Qt环境（在任何PyQt6导入之前）
-setup_qt_environment()
+# 在PyInstaller打包环境下，通常不需要手动设置，除非遇到特殊问题
+if not getattr(sys, 'frozen', False):
+    setup_qt_environment()
 
 def check_and_install_dependencies():
     """检查并安装所需的依赖"""
