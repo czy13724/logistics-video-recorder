@@ -33,13 +33,6 @@ jobs:
             --add-data="web;web" `
             run.py
 
-      - name: 创建启动脚本
-        run: |
-          echo '@echo off' > dist/物流视频管理/启动.bat
-          echo 'start "" "%~dp0物流视频管理.exe"' >> dist/物流视频管理/启动.bat
-          echo 'echo 软件已启动，请在打开的窗口中使用' >> dist/物流视频管理/启动.bat
-          echo 'pause' >> dist/物流视频管理/启动.bat
-
       - name: 获取版本号
         id: get_version
         shell: bash
@@ -54,7 +47,7 @@ jobs:
       - name: 打包发布文件
         run: |
           cd dist
-          Compress-Archive -Path 物流视频管理 -DestinationPath 物流视频管理-Windows-${{ steps.get_version.outputs.version }}.zip
+          Compress-Archive -Path 物流视频管理.exe -DestinationPath 物流视频管理-Windows-${{ steps.get_version.outputs.version }}.zip
           cd ..
 
       - name: 上传Windows安装包
