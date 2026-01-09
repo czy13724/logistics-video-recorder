@@ -5,6 +5,10 @@ from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
+a = Analysis(
+    ['run.py'],
+    pathex=[],
+    binaries=[],
     datas=[
         ('config.json.example', '.'),
         ('web', 'web'),
