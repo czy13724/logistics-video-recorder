@@ -83,6 +83,15 @@ jobs:
       - name: 构建macOS应用
         run: |
           pyinstaller logistics-video.spec
+          
+          # 确保Qt插件在正确的位置
+          if [ -d "dist/物流视频管理.app/Contents/MacOS/PyQt6/Qt6/plugins" ]; then
+            echo "Qt插件已正确打包"
+            ls -la "dist/物流视频管理.app/Contents/MacOS/PyQt6/Qt6/plugins/platforms" || true
+          else
+            echo "警告: Qt插件路径不存在，检查Frameworks目录"
+            find "dist/物流视频管理.app" -name "*.dylib" -type f | head -5 || true
+          fi
 
       - name: 获取版本号
         id: get_version
