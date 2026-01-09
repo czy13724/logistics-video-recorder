@@ -24,42 +24,24 @@
         "productName": "物流视频管理",
         "copyright": "Copyright © 2026",
         "directories": {
-            "output": "dist",
-            "buildResources": "build"
+            "output": "dist"
         },
         "files": [
             "electron/**/*",
             "web/**/*",
-            "videos/.gitkeep",
-            "reports/.gitkeep",
-            "exports/.gitkeep"
-        ],
-        "extraResources": [
-            {
-                "from": "python-backend",
-                "to": "python-backend",
-                "filter": [
-                    "**/*"
-                ]
-            }
+            "web_server.py",
+            "video_recorder.py",
+            "video_recorder_gui.py",
+            "run.py",
+            "requirements*.txt",
+            "config.json.example",
+            "LICENSE"
         ],
         "win": {
             "target": [
-                {
-                    "target": "nsis",
-                    "arch": [
-                        "x64",
-                        "arm64"
-                    ]
-                },
-                {
-                    "target": "portable",
-                    "arch": [
-                        "x64"
-                    ]
-                }
+                "nsis",
+                "portable"
             ],
-            "icon": "build/icon.ico",
             "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
         },
         "nsis": {
@@ -68,77 +50,24 @@
             "createDesktopShortcut": true,
             "createStartMenuShortcut": true,
             "shortcutName": "物流视频管理",
-            "installerIcon": "build/icon.ico",
-            "uninstallerIcon": "build/icon.ico",
-            "installerHeaderIcon": "build/icon.ico",
-            "license": "LICENSE",
-            "language": "2052"
+            "license": "LICENSE"
         },
         "mac": {
             "target": [
-                {
-                    "target": "dmg",
-                    "arch": [
-                        "x64",
-                        "arm64"
-                    ]
-                },
-                {
-                    "target": "zip",
-                    "arch": [
-                        "x64",
-                        "arm64"
-                    ]
-                }
+                "dmg",
+                "zip"
             ],
-            "icon": "build/icon.icns",
             "category": "public.app-category.business",
-            "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
-            "hardenedRuntime": true,
-            "gatekeeperAssess": false,
-            "entitlements": "build/entitlements.mac.plist",
-            "entitlementsInherit": "build/entitlements.mac.plist"
+            "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
         },
         "dmg": {
-            "contents": [
-                {
-                    "x": 130,
-                    "y": 220
-                },
-                {
-                    "x": 410,
-                    "y": 220,
-                    "type": "link",
-                    "path": "/Applications"
-                }
-            ],
-            "title": "${productName} ${version}",
-            "backgroundColor": "#667eea"
+            "title": "${productName} ${version}"
         },
         "linux": {
             "target": [
-                {
-                    "target": "AppImage",
-                    "arch": [
-                        "x64",
-                        "arm64"
-                    ]
-                },
-                {
-                    "target": "deb",
-                    "arch": [
-                        "x64",
-                        "arm64"
-                    ]
-                },
-                {
-                    "target": "rpm",
-                    "arch": [
-                        "x64"
-                    ]
-                }
+                "AppImage",
+                "deb"
             ],
-            "icon": "build/icons",
             "category": "Office",
             "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
             "description": "物流退货视频录制与管理系统"
