@@ -5,39 +5,13 @@ from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
-# 收集PyQt6的插件文件
-pyqt6_plugins = []
-try:
-    import PyQt6
-    pyqt6_path = os.path.dirname(PyQt6.__file__)
-    qt_plugins_path = os.path.join(pyqt6_path, 'Qt6', 'plugins')
-    
-    if os.path.exists(qt_plugins_path):
-        # 收集platforms插件（最重要）
-        platforms_path = os.path.join(qt_plugins_path, 'platforms')
-        if os.path.exists(platforms_path):
-            for file in os.listdir(platforms_path):
-                if file.endswith(('.so', '.dylib', '.dll')):
-                    src = os.path.join(platforms_path, file)
-                    dst = os.path.join('PyQt6', 'Qt6', 'plugins', 'platforms')
-                    pyqt6_plugins.append((src, dst))
-        
-        # 收集其他插件目录（可选，根据需要添加）
-        # 例如：imageformats, styles, 等
-except Exception as e:
-    print(f"警告: 无法收集PyQt6插件: {e}")
-
-a = Analysis(
-    ['run.py'],
-    pathex=[],
-    binaries=[],
     datas=[
         ('config.json.example', '.'),
         ('web', 'web'),
         ('video_recorder.py', '.'),
         ('video_recorder_gui.py', '.'),
         ('web_server.py', '.'),
-    ] + pyqt6_plugins,
+    ],
     hiddenimports=[
         'cv2',
         'PyQt6.QtCore',
