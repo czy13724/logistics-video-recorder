@@ -3,7 +3,7 @@
 提供RESTful API接口用于视频管理、数据统计等功能
 """
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -98,20 +98,25 @@ def parse_filename(filename: str) -> dict:
         parts = name_without_ext.split('_')
         
         if len(parts) >= 3:
-            tracking_number = '_'.join(parts[:-2])
+            # 最后两个部分应该是日期(8位)和时间(6位)
             date_str = parts[-2]
             time_str = parts[-1]
-            timestamp = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]} {time_str[:2]}:{time_str[2:4]}:{time_str[4:6]}"
-            return {
-                "tracking_number": tracking_number,
-                "timestamp": timestamp
-            }
+            
+            # 验证日期和时间格式
+            if len(date_str) == 8 and date_str.isdigit() and len(time_str) == 6 and time_str.isdigit():
+                tracking_number = '_'.join(parts[:-2])
+                timestamp = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]} {time_str[:2]}:{time_str[2:4]}:{time_str[4:6]}"
+                return {
+                    "tracking_number": tracking_number,
+                    "timestamp": timestamp
+                }
     except Exception as e:
         print(f"解析文件名失败: {filename}, 错误: {e}")
     
+    # 如果解析失败，尝试从文件修改时间获取时间戳
     return {
-        "tracking_number": filename,
-        "timestamp": datetime.now().isoformat()
+        "tracking_number": filename.rsplit('.', 1)[0] if '.' in filename else filename,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
 
@@ -173,8 +178,8 @@ async def get_videos(
     """获取所有视频记录"""
     videos = []
     
-    # 遍历videos目录下的所有mp4文件
-    for video_file in VIDEOS_DIR.glob("*.mp4"):
+    # 递归遍历videos目录下的所有mp4文件（包括子目录）
+    for video_file in VIDEOS_DIR.rglob("*.mp4"):
         file_info = parse_filename(video_file.name)
         video_info = get_video_info(video_file)
         metadata = load_video_metadata(file_info["tracking_number"], file_info["timestamp"])
@@ -207,10 +212,13 @@ async def get_videos(
             if not has_problems and metadata.get("problems"):
                 continue
         
+        # 使用相对路径（相对于VIDEOS_DIR）
+        relative_path = video_file.relative_to(VIDEOS_DIR)
+        
         videos.append(VideoRecord(
             tracking_number=file_info["tracking_number"],
             timestamp=file_info["timestamp"],
-            file_path=str(video_file.name),
+            file_path=str(relative_path),
             duration=video_info.get("duration"),
             size=video_info.get("size"),
             problems=metadata.get("problems", []),
@@ -224,14 +232,19 @@ async def get_videos(
 
 
 @app.get("/api/videos/{tracking_number}/stream")
-async def stream_video(tracking_number: str, timestamp: str):
+async def stream_video(tracking_number: str, timestamp: str = Query(..., description="时间戳 YYYY-MM-DD HH:MM:SS")):
     """流式传输视频"""
-    # 构建文件名
+    # 构建文件名：快递单号_YYYYMMDD_HHMMSS.mp4
     timestamp_clean = timestamp.replace(':', '').replace('-', '').replace(' ', '_')
     video_file = VIDEOS_DIR / f"{tracking_number}_{timestamp_clean}.mp4"
     
+    # 如果直接路径不存在，尝试递归查找
     if not video_file.exists():
-        raise HTTPException(status_code=404, detail="视频文件不存在")
+        matching_files = list(VIDEOS_DIR.rglob(f"{tracking_number}_{timestamp_clean}.mp4"))
+        if matching_files:
+            video_file = matching_files[0]
+        else:
+            raise HTTPException(status_code=404, detail="视频文件不存在")
     
     return FileResponse(
         video_file,
@@ -244,7 +257,11 @@ async def stream_video(tracking_number: str, timestamp: str):
 
 
 @app.put("/api/videos/{tracking_number}/problems")
-async def update_video_problems(tracking_number: str, timestamp: str, update: ProblemUpdate):
+async def update_video_problems(
+    tracking_number: str, 
+    timestamp: str = Query(..., description="时间戳 YYYY-MM-DD HH:MM:SS"), 
+    update: ProblemUpdate = Body(...)
+):
     """更新视频的问题标记和备注"""
     try:
         save_video_metadata(tracking_number, timestamp, update.problems, update.notes)
@@ -254,11 +271,17 @@ async def update_video_problems(tracking_number: str, timestamp: str, update: Pr
 
 
 @app.delete("/api/videos/{tracking_number}")
-async def delete_video(tracking_number: str, timestamp: str):
+async def delete_video(tracking_number: str, timestamp: str = Query(..., description="时间戳 YYYY-MM-DD HH:MM:SS")):
     """删除视频及其元数据"""
     timestamp_clean = timestamp.replace(':', '').replace('-', '').replace(' ', '_')
     video_file = VIDEOS_DIR / f"{tracking_number}_{timestamp_clean}.mp4"
     metadata_file = VIDEOS_DIR / f"{tracking_number}_{timestamp_clean}.json"
+    
+    # 如果直接路径不存在，尝试递归查找
+    if not video_file.exists():
+        matching_files = list(VIDEOS_DIR.rglob(f"{tracking_number}_{timestamp_clean}.mp4"))
+        if matching_files:
+            video_file = matching_files[0]
     
     deleted = []
     
@@ -287,7 +310,7 @@ async def get_statistics():
     today = datetime.now().date()
     today_count = 0
     
-    for video_file in VIDEOS_DIR.glob("*.mp4"):
+    for video_file in VIDEOS_DIR.rglob("*.mp4"):
         file_info = parse_filename(video_file.name)
         video_info = get_video_info(video_file)
         metadata = load_video_metadata(file_info["tracking_number"], file_info["timestamp"])

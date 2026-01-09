@@ -16,7 +16,7 @@ class LogisticsVideoRecorder:
         self.recording = False
         self.current_tracking_number = None
         self.stop_event = Event()
-        self.base_path = "recordings"
+        self.base_path = "videos"
         self.record_start_time = None
         self.frame_count = 0
         self.last_frame = None
@@ -59,22 +59,19 @@ class LogisticsVideoRecorder:
             print(f"摄像头初始化失败: {str(e)}")
             raise
 
-    def create_date_folder(self):
-        """创建以日期命名的文件夹"""
-        today = datetime.datetime.now().strftime("%Y-%m-%d")
-        folder_path = os.path.join(self.base_path, today)
-        os.makedirs(folder_path, exist_ok=True)
-        return folder_path
-
     def start_recording(self, tracking_number):
         """开始录制视频"""
         try:
             if self.recording:
                 self.stop_recording()
 
-            folder_path = self.create_date_folder()
-            filename = f"{tracking_number}.mp4"
-            filepath = os.path.join(folder_path, filename)
+            # 确保videos目录存在
+            os.makedirs(self.base_path, exist_ok=True)
+            
+            # 生成文件名：快递单号_YYYYMMDD_HHMMSS.mp4
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"{tracking_number}_{timestamp}.mp4"
+            filepath = os.path.join(self.base_path, filename)
 
             # 尝试不同的编码器
             codecs = [self.config["codec"], "mp4v", "XVID"]

@@ -450,18 +450,27 @@ class VideoManagerDialog(QDialog):
             videos_dir = os.path.abspath(os.path.join(os.getcwd(), "videos"))
             if not os.path.exists(videos_dir):
                 os.makedirs(videos_dir)
-                
-            # 查找匹配的视频文件
-            pattern = f"{tracking_number}_{timestamp}_*.mp4"
-            matching_files = [f for f in os.listdir(videos_dir) if fnmatch.fnmatch(f, pattern)]
             
-            if not matching_files:
-                QMessageBox.warning(self, "错误", f"找不到视频文件: {pattern}")
-                return
+            # 将时间戳格式从 "YYYY-MM-DD HH:MM:SS" 转换为文件名格式 "YYYYMMDD_HHMMSS"
+            timestamp_clean = timestamp.replace(':', '').replace('-', '').replace(' ', '_')
+            
+            # 构建文件名
+            video_filename = f"{tracking_number}_{timestamp_clean}.mp4"
+            video_path = os.path.join(videos_dir, video_filename)
+            
+            # 如果直接路径不存在，尝试查找匹配的文件
+            if not os.path.exists(video_path):
+                # 使用通配符查找
+                pattern = f"{tracking_number}_*.mp4"
+                matching_files = [f for f in os.listdir(videos_dir) if fnmatch.fnmatch(f, pattern)]
                 
-            # 使用最新的文件（如果有多个匹配的文件）
-            video_file = sorted(matching_files)[-1]
-            video_path = os.path.join(videos_dir, video_file)
+                if not matching_files:
+                    QMessageBox.warning(self, "错误", f"找不到视频文件: {video_filename}")
+                    return
+                    
+                # 使用最新的文件（如果有多个匹配的文件）
+                video_file = sorted(matching_files)[-1]
+                video_path = os.path.join(videos_dir, video_file)
             
             print(f"正在打开视频: {video_path}")
             
@@ -505,10 +514,25 @@ class VideoManagerDialog(QDialog):
             for row, (video_file, _) in enumerate(video_files):
                 try:
                     # 从文件名中提取单号和时间
-                    parts = video_file.split('_')
+                    # 格式: 快递单号_YYYYMMDD_HHMMSS.mp4
+                    name_without_ext = video_file.rsplit('.', 1)[0]
+                    parts = name_without_ext.split('_')
                     if len(parts) >= 3:  # 确保至少有单号、日期和时间三部分
-                        tracking_number = parts[0]
-                        timestamp = parts[1]  # 只显示日期部分
+                        # 最后两个部分应该是日期(8位)和时间(6位)
+                        date_str = parts[-2]
+                        time_str = parts[-1]
+                        if len(date_str) == 8 and date_str.isdigit() and len(time_str) == 6 and time_str.isdigit():
+                            tracking_number = '_'.join(parts[:-2])
+                            # 格式化时间戳: YYYY-MM-DD HH:MM:SS
+                            timestamp = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]} {time_str[:2]}:{time_str[2:4]}:{time_str[4:6]}"
+                        else:
+                            # 如果格式不正确，使用文件名作为单号
+                            tracking_number = name_without_ext
+                            timestamp = datetime.fromtimestamp(os.path.getmtime(os.path.join(videos_dir, video_file))).strftime("%Y-%m-%d %H:%M:%S")
+                    else:
+                        # 如果格式不正确，使用文件名作为单号
+                        tracking_number = name_without_ext
+                        timestamp = datetime.fromtimestamp(os.path.getmtime(os.path.join(videos_dir, video_file))).strftime("%Y-%m-%d %H:%M:%S")
                         
                         # 设置表格行数
                         self.table.setRowCount(row + 1)

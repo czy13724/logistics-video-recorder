@@ -57,7 +57,7 @@ def start_server(host: str = "0.0.0.0", port: int = 8000, reload: bool = False):
     """)
     
     uvicorn.run(
-        "web_server:app",
+        app,
         host=host,
         port=port,
         reload=reload,

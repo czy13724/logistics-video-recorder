@@ -7,11 +7,13 @@ import glob
 
 def find_qt_plugin_path():
     """查找 Qt 插件路径"""
+    # 动态获取Python版本路径
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
     possible_paths = [
         os.path.join(os.path.dirname(os.__file__), "site-packages", "PyQt6", "Qt6", "plugins"),
         os.path.join(os.path.dirname(os.__file__), "site-packages", "PyQt6", "Qt", "plugins"),
-        os.path.join(os.getcwd(), "venv", "lib", "python3.12", "site-packages", "PyQt6", "Qt6", "plugins"),
-        os.path.join(os.getcwd(), "venv", "lib", "python3.12", "site-packages", "PyQt6", "Qt", "plugins"),
+        os.path.join(os.getcwd(), "venv", "lib", f"python{python_version}", "site-packages", "PyQt6", "Qt6", "plugins"),
+        os.path.join(os.getcwd(), "venv", "lib", f"python{python_version}", "site-packages", "PyQt6", "Qt", "plugins"),
     ]
     
     for path in possible_paths:
