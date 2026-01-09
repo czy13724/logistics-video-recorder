@@ -1,0 +1,9 @@
+{
+    "camera_index": 0,
+    "fps": 30.0,
+    "codec": "avc1",
+    "resolution": [1920, 1080],
+    "font_scale": 1,
+    "font_thickness": 2,
+    "font_color": [0, 0, 255]
+}

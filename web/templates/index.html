@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>物流视频录制管理系统</title>
+    <meta name="description" content="物流退货视频录制与管理系统，支持视频管理、数据统计、问题标记等功能">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+
+    <!-- 主题色 -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="msapplication-TileColor" content="#667eea">
+
+    <!-- iOS Safari -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="物流视频">
+    <link rel="apple-touch-icon" href="/static/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/static/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="/static/icons/icon-96x96.png">
+    <link rel="apple-touch-icon" sizes="128x128" href="/static/icons/icon-128x128.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/static/icons/icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/static/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/static/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="384x384" href="/static/icons/icon-384x384.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/static/icons/icon-512x512.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/icon-72x72.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/icon-72x72.png">
+
+    <!-- Microsoft -->
+    <meta name="msapplication-config" content="/static/browserconfig.xml">
+
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- 侧边栏导航 -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">📦</div>
+            <h1>物流视频管理</h1>
+        </div>
+
+        <nav class="nav-menu">
+            <a href="#dashboard" class="nav-item active" data-page="dashboard">
+                <span class="icon">📊</span>
+                <span class="text">数据概览</span>
+            </a>
+            <a href="#videos" class="nav-item" data-page="videos">
+                <span class="icon">🎥</span>
+                <span class="text">视频管理</span>
+            </a>
+            <a href="#exports" class="nav-item" data-page="exports">
+                <span class="icon">📥</span>
+                <span class="text">导出文件</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="storage-info">
+                <div class="storage-label">存储空间</div>
+                <div class="storage-value" id="storageUsed">加载中...</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区域 -->
+    <main class="main-content">
+        <!-- 顶部栏 -->
+        <header class="top-bar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索快递单号...">
+                <button class="search-btn" onclick="searchVideos()">🔍</button>
+            </div>
+
+            <div class="top-actions">
+                <div class="date-time" id="currentDateTime"></div>
+                <button class="btn-refresh" onclick="refreshData()" title="刷新数据">🔄</button>
+            </div>
+        </header>
+
+        <!-- 数据概览页面 -->
+        <section id="page-dashboard" class="page-content active">
+            <h2 class="page-title">数据概览</h2>
+
+            <!-- 统计卡片 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🎬
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">总视频数</div>
+                        <div class="stat-value" id="totalVideos">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">📅
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">今日录制</div>
+                        <div class="stat-value" id="todayVideos">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">⚠️
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">问题数量</div>
+                        <div class="stat-value" id="totalProblems">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">💾
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">存储占用</div>
+                        <div class="stat-value" id="storageSize">0 MB</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">最近7天录制趋势</h3>
+                    <canvas id="trendChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">问题类型分布</h3>
+                    <canvas id="problemChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 视频管理页面 -->
+        <section id="page-videos" class="page-content">
+            <div class="page-header">
+                <h2 class="page-title">视频管理</h2>
+
+                <div class="filter-group">
+                    <input type="date" id="startDate" class="date-input">
+                    <span>至</span>
+                    <input type="date" id="endDate" class="date-input">
+                    <select id="problemFilter" class="filter-select">
+                        <option value="">全部视频</option>
+                        <option value="true">仅有问题</option>
+                        <option value="false">无问题</option>
+                    </select>
+                    <button class="btn-primary" onclick="applyFilters()">筛选</button>
+                </div>
+            </div>
+
+            <div class="video-grid" id="videoGrid">
+                <!-- 视频卡片将通过JavaScript动态生成 -->
+            </div>
+        </section>
+
+        <!-- 导出文件页面 -->
+        <section id="page-exports" class="page-content">
+            <h2 class="page-title">导出文件</h2>
+
+            <div class="export-list" id="exportList">
+                <!-- 导出文件列表将通过JavaScript动态生成 -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 视频播放模态框 -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content video-modal-content">
+            <div class="modal-header">
+                <h3 id="modalVideoTitle">视频播放</h3>
+                <button class="modal-close" onclick="closeVideoModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <video id="modalVideo" controls></video>
+
+                <div class="video-info-section">
+                    <h4>问题标记</h4>
+                    <div id="problemTags" class="problem-tags"></div>
+
+                    <h4>备注</h4>
+                    <textarea id="videoNotes" class="notes-textarea" placeholder="添加备注信息..."></textarea>
+
+                    <div class="modal-actions">
+                        <button class="btn-primary" onclick="saveVideoInfo()">保存</button>
+                        <button class="btn-danger" onclick="deleteVideo()">删除视频</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 问题标记模态框 -->
+    <div id="problemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加问题标记</h3>
+                <button class="modal-close" onclick="closeProblemModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="problem-options">
+                    <label class="problem-option">
+                        <input type="checkbox" value="退回商品非本店所售">
+                        <span>退回商品非本店所售</span>
+                    </label>
+                    <label class="problem-option">
+                        <input type="checkbox" value="退回商品数量与申请售后数量不符">
+                        <span>退回商品数量与申请售后数量不符</span>
+                    </label>
+                    <label class="problem-option">
+                        <input type="checkbox" value="商品损坏">
+                        <span>商品损坏</span>
+                    </label>
+                    <label class="problem-option">
+                        <input type="checkbox" value="包装破损">
+                        <span>包装破损</span>
+                    </label>
+                    <label class="problem-option">
+                        <input type="checkbox" value="商品缺失">
+                        <span>商品缺失</span>
+                    </label>
+                    <label class="problem-option">
+                        <input type="checkbox" value="商品型号不符">
+                        <span>商品型号不符</span>
+                    </label>
+                    <label class="problem-option">
+                        <input type="checkbox" value="其他问题">
+                        <span>其他问题</span>
+                    </label>
+                </div>
+
+                <div class="custom-problem">
+                    <input type="text" id="customProblem" placeholder="输入自定义问题...">
+                    <button class="btn-secondary" onclick="addCustomProblem()">添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载中提示 -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>加载中...</p>
+    </div>
+
+    <!-- Toast通知 -->
+    <div id="toast" class="toast"></div>
+
+    <!-- PWA安装提示 -->
+    <div id="installPrompt" class="install-prompt">
+        <div class="install-prompt-content">
+            <div class="install-prompt-icon">📦</div>
+            <div class="install-prompt-text">
+                <strong>安装应用</strong>
+                <p>将物流视频管理系统添加到主屏幕，体验原生App效果</p>
+            </div>
+            <button class="btn-primary" id="installButton">立即安装</button>
+            <button class="install-prompt-close" id="installClose">&times;</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/static/js/app.js"></script>
+
+    <!-- Service Worker 注册 -->
+    <script>
+        // 注册 Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker 注册成功:', registration.scope);
+
+                        // 检查更新
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // 新版本可用
+                                    if (confirm('发现新版本！点击确定刷新页面以使用最新版本。')) {
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.log('❌ Service Worker 注册失败:', error);
+                    });
+            });
+
+            // 监听 Service Worker 控制器变化
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                window.location.reload();
+            });
+        }
+
+        // PWA 安装提示
+        let deferredPrompt;
+        const installPrompt = document.getElementById('installPrompt');
+        const installButton = document.getElementById('installButton');
+        const installClose = document.getElementById('installClose');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // 阻止默认的安装提示
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // 显示自定义安装提示
+            setTimeout(() => {
+                installPrompt.classList.add('show');
+            }, 3000); // 3秒后显示
+        });
+
+        installButton.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                return;
+            }
+
+            // 显示安装提示
+            deferredPrompt.prompt();
+
+            // 等待用户响应
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`用户选择: ${outcome}`);
+
+            // 清理
+            deferredPrompt = null;
+            installPrompt.classList.remove('show');
+        });
+
+        installClose.addEventListener('click', () => {
+            installPrompt.classList.remove('show');
+        });
+
+        // 检测应用是否已安装
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ 应用已安装到主屏幕');
+            installPrompt.classList.remove('show');
+            showToast('应用已成功安装！', 'success');
+        });
+
+        // iOS Safari 安装提示
+        const isIos = () => {
+            const userAgent = window.navigator.userAgent.toLowerCase();
+            return /iphone|ipad|ipod/.test(userAgent);
+        };
+
+        const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+        if (isIos() && !isInStandaloneMode()) {
+            // iOS设备且未安装，可以显示提示
+            setTimeout(() => {
+                const iosPrompt = confirm(
+                    '💡 提示：点击浏览器底部的"分享"按钮，然后选择"添加到主屏幕"，即可像App一样使用本系统！'
+                );
+            }, 5000);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,155 @@
+{
+    "name": "logistics-video-recorder",
+    "version": "2.0.0",
+    "description": "物流视频录制管理系统 - 支持Web端、桌面端、移动端",
+    "main": "electron/main.js",
+    "author": "Your Name",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yourusername/logistics-video-recorder.git"
+    },
+    "scripts": {
+        "start": "electron .",
+        "build": "electron-builder",
+        "build:win": "electron-builder --win",
+        "build:mac": "electron-builder --mac",
+        "build:linux": "electron-builder --linux",
+        "build:all": "electron-builder -mwl",
+        "pack": "electron-builder --dir",
+        "postinstall": "electron-builder install-app-deps"
+    },
+    "build": {
+        "appId": "com.logistics.video.recorder",
+        "productName": "物流视频管理",
+        "copyright": "Copyright © 2026",
+        "directories": {
+            "output": "dist",
+            "buildResources": "build"
+        },
+        "files": [
+            "electron/**/*",
+            "web/**/*",
+            "videos/.gitkeep",
+            "reports/.gitkeep",
+            "exports/.gitkeep"
+        ],
+        "extraResources": [
+            {
+                "from": "python-backend",
+                "to": "python-backend",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ],
+        "win": {
+            "target": [
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64",
+                        "arm64"
+                    ]
+                },
+                {
+                    "target": "portable",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ],
+            "icon": "build/icon.ico",
+            "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "物流视频管理",
+            "installerIcon": "build/icon.ico",
+            "uninstallerIcon": "build/icon.ico",
+            "installerHeaderIcon": "build/icon.ico",
+            "license": "LICENSE",
+            "language": "2052"
+        },
+        "mac": {
+            "target": [
+                {
+                    "target": "dmg",
+                    "arch": [
+                        "x64",
+                        "arm64"
+                    ]
+                },
+                {
+                    "target": "zip",
+                    "arch": [
+                        "x64",
+                        "arm64"
+                    ]
+                }
+            ],
+            "icon": "build/icon.icns",
+            "category": "public.app-category.business",
+            "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+            "hardenedRuntime": true,
+            "gatekeeperAssess": false,
+            "entitlements": "build/entitlements.mac.plist",
+            "entitlementsInherit": "build/entitlements.mac.plist"
+        },
+        "dmg": {
+            "contents": [
+                {
+                    "x": 130,
+                    "y": 220
+                },
+                {
+                    "x": 410,
+                    "y": 220,
+                    "type": "link",
+                    "path": "/Applications"
+                }
+            ],
+            "title": "${productName} ${version}",
+            "backgroundColor": "#667eea"
+        },
+        "linux": {
+            "target": [
+                {
+                    "target": "AppImage",
+                    "arch": [
+                        "x64",
+                        "arm64"
+                    ]
+                },
+                {
+                    "target": "deb",
+                    "arch": [
+                        "x64",
+                        "arm64"
+                    ]
+                },
+                {
+                    "target": "rpm",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ],
+            "icon": "build/icons",
+            "category": "Office",
+            "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+            "description": "物流退货视频录制与管理系统"
+        }
+    },
+    "dependencies": {
+        "electron-store": "^8.1.0",
+        "express": "^4.18.2"
+    },
+    "devDependencies": {
+        "electron": "^28.1.0",
+        "electron-builder": "^24.9.1"
+    }
+}
