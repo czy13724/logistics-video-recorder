@@ -27,7 +27,7 @@ jobs:
         run: |
           pyinstaller --name="物流视频管理" `
             --windowed `
-            --onedir `
+            --onefile `
             --icon=build/icon.png `
             --add-data="config.json.example;." `
             --add-data="web;web" `
