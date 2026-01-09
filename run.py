@@ -107,20 +107,7 @@ def check_and_install_dependencies():
         print(f"\n检查 {package_group}...")
         try:
             if package_group == 'PyQt6':
-                # 特殊处理 PyQt6
-                try:
-                    subprocess.check_call([
-                        sys.executable, "-m", "pip", "uninstall", "-y", "PyQt6", "PyQt6-Qt6", "PyQt6-sip"
-                    ])
-                except:
-                    pass
-                subprocess.check_call([
-                    sys.executable, "-m", "pip", "install",
-                    "--no-cache-dir",
-                    "--force-reinstall",
-                    "--index-url", "https://pypi.org/simple",
-                    "PyQt6"
-                ])
+                 import PyQt6.QtCore
             else:
                 # 尝试导入
                 if package_group == 'opencv-python':
@@ -153,8 +140,10 @@ def check_and_install_dependencies():
 def main():
     """主函数"""
     # 注意：Qt环境已经在文件顶部设置好了
-    print("检查依赖...")
-    check_and_install_dependencies()
+    # 注意：Qt环境已经在文件顶部设置好了
+    if not getattr(sys, 'frozen', False):
+        print("检查依赖...")
+        check_and_install_dependencies()
     
     print("\n启动应用程序...")
     try:
