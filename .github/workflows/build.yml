@@ -64,129 +64,8 @@ jobs:
           path: dist/*.zip
           retention-days: 30
 
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
-      - name: 设置Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: 安装依赖
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: 构建macOS应用
-        run: |
-          pyinstaller logistics-video.spec
-          
-          # 确保Qt插件在正确的位置
-          if [ -d "dist/物流视频管理.app/Contents/MacOS/PyQt6/Qt6/plugins" ]; then
-            echo "Qt插件已正确打包"
-            ls -la "dist/物流视频管理.app/Contents/MacOS/PyQt6/Qt6/plugins/platforms" || true
-          else
-            echo "警告: Qt插件路径不存在，检查Frameworks目录"
-            find "dist/物流视频管理.app" -name "*.dylib" -type f | head -5 || true
-          fi
-
-      - name: 获取版本号
-        id: get_version
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-          else
-            VERSION="dev"
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: 创建DMG
-        run: |
-          # 创建临时目录
-          mkdir -p dmg_temp
-          cp -r "dist/物流视频管理.app" dmg_temp/
-          
-          # 创建说明文件
-          cat > dmg_temp/使用说明.txt << 'EOF'
-          使用方法：
-          1. 将"物流视频管理.app"拖到应用程序文件夹
-          2. 双击运行（首次启动需要10-20秒，请耐心等待）
-          3. 如遇到"无法打开"提示，请：
-             - 打开"系统偏好设置" → "安全性与隐私"
-             - 点击"仍要打开"
-          EOF
-          
-          # 创建DMG
-          hdiutil create -volname "物流视频管理" \
-            -srcfolder dmg_temp \
-            -ov -format UDZO \
-            "物流视频管理-macOS-${{ steps.get_version.outputs.version }}.dmg"
-
-      - name: 上传macOS安装包
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-dmg
-          path: "*.dmg"
-          retention-days: 30
-
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
-      - name: 设置Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: 安装系统依赖
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pyqt6 libxcb-cursor0
-
-      - name: 安装Python依赖
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: 构建Linux应用
-        run: |
-          pyinstaller --name="物流视频管理" \
-            --windowed \
-            --onefile \
-            --icon=build/icon.png \
-            --add-data="config.json.example:." \
-            run.py
-
-      - name: 获取版本号
-        id: get_version
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-          else
-            VERSION="dev"
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: 打包发布文件
-        run: |
-          cd dist
-          tar -czf 物流视频管理-Linux-${{ steps.get_version.outputs.version }}.tar.gz 物流视频管理
-          cd ..
-
-      - name: 上传Linux安装包
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-binary
-          path: "dist/*.tar.gz"
-          retention-days: 30
-
   release:
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
@@ -203,8 +82,6 @@ jobs:
         with:
           files: |
             artifacts/windows-exe/*
-            artifacts/macos-dmg/*
-            artifacts/linux-binary/*
           draft: false
           prerelease: false
           generate_release_notes: true
