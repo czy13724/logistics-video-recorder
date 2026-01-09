@@ -40,10 +40,21 @@ jobs:
           echo 'echo 软件已启动，请在打开的窗口中使用' >> dist/物流视频管理/启动.bat
           echo 'pause' >> dist/物流视频管理/启动.bat
 
+      - name: 获取版本号
+        id: get_version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="dev"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: 打包发布文件
         run: |
           cd dist
-          Compress-Archive -Path 物流视频管理 -DestinationPath 物流视频管理-Windows.zip
+          Compress-Archive -Path 物流视频管理 -DestinationPath 物流视频管理-Windows-${{ steps.get_version.outputs.version }}.zip
           cd ..
 
       - name: 上传Windows安装包
@@ -73,6 +84,16 @@ jobs:
         run: |
           pyinstaller logistics-video.spec
 
+      - name: 获取版本号
+        id: get_version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="dev"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: 创建DMG
         run: |
           # 创建临时目录
@@ -93,7 +114,7 @@ jobs:
           hdiutil create -volname "物流视频管理" \
             -srcfolder dmg_temp \
             -ov -format UDZO \
-            "物流视频管理-macOS.dmg"
+            "物流视频管理-macOS-${{ steps.get_version.outputs.version }}.dmg"
 
       - name: 上传macOS安装包
         uses: actions/upload-artifact@v4
@@ -132,10 +153,20 @@ jobs:
             --add-data="config.json.example:." \
             run.py
 
+      - name: 获取版本号
+        id: get_version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="dev"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: 打包发布文件
         run: |
           cd dist
-          tar -czf 物流视频管理-linux-x64.tar.gz 物流视频管理
+          tar -czf 物流视频管理-Linux-${{ steps.get_version.outputs.version }}.tar.gz 物流视频管理
           cd ..
 
       - name: 上传Linux安装包

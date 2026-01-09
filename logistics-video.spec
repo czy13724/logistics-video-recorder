@@ -9,14 +9,27 @@ a = Analysis(
     datas=[
         ('config.json.example', '.'),
         ('web', 'web'),
+        ('video_recorder.py', '.'),
+        ('video_recorder_gui.py', '.'),
+        ('web_server.py', '.'),
     ],
     hiddenimports=[
         'cv2',
         'PyQt6.QtCore',
         'PyQt6.QtGui',
         'PyQt6.QtWidgets',
+        'PyQt6.QtMultimedia',
+        'PyQt6.QtMultimediaWidgets',
         'reportlab',
+        'reportlab.pdfgen',
+        'reportlab.lib',
+        'reportlab.platypus',
         'barcode',
+        'barcode.writer',
+        'PIL',
+        'PIL.Image',
+        'fastapi',
+        'uvicorn',
     ],
     hookspath=[],
     hooksconfig={},
@@ -33,17 +46,13 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='物流视频管理',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -53,9 +62,20 @@ exe = EXE(
     icon='build/icon.png',
 )
 
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='物流视频管理',
+)
+
 # macOS App bundle
 app = BUNDLE(
-    exe,
+    coll,
     name='物流视频管理.app',
     icon='build/icon.png',
     bundle_identifier='com.logistics.video.recorder',
@@ -63,5 +83,7 @@ app = BUNDLE(
         'NSPrincipalClass': 'NSApplication',
         'NSHighResolutionCapable': 'True',
         'LSMinimumSystemVersion': '10.13.0',
+        'NSCameraUsageDescription': '需要使用摄像头录制视频',
+        'NSMicrophoneUsageDescription': '需要使用麦克风录制声音',
     },
 )
