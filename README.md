@@ -4,39 +4,46 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/)
-[![Node](https://img.shields.io/badge/node-18+-green.svg)](https://nodejs.org/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com)
 
 ## ✨ 特性
 
 - 📹 **视频录制** - 支持多摄像头，实时预览，自动保存
-- 🌐 **Web管理** - 现代化界面，在线播放，数据可视化
+- 🌐 **Web管理** - 现代化界面，在线播放，数据可视化  
 - 📱 **PWA移动端** - 可安装到手机，离线访问，原生体验
-- 💻 **跨平台桌面应用** - Windows/Mac/Linux独立安装包
+- 💻 **桌面应用** - PyQt6原生应用，支持Windows/Mac/Linux
 - 🤖 **自动化构建** - GitHub Actions自动打包所有平台
 - 📊 **数据统计** - 图表展示，趋势分析，问题追踪
 - 🎨 **现代化UI** - 深色主题，渐变色彩，流畅动画
 
 ## 🚀 快速开始
 
-### Web端 (推荐)
-
-```bash
-# 1. 一键启动
-./start_web.sh  # Mac/Linux
-# 或
-start_web.bat   # Windows
-
-# 2. 访问
-浏览器打开: http://localhost:8000
-```
-
-### 桌面应用
+### 方式一：下载安装包（推荐）
 
 从 [Releases](../../releases) 下载对应平台的安装包：
-- **Windows**: `物流视频管理-v2.0.0-win-x64.exe`
-- **macOS**: `物流视频管理-v2.0.0-mac-x64.dmg` (Intel) / `mac-arm64.dmg` (Apple Silicon)
-- **Linux**: `物流视频管理-v2.0.0-linux-x64.AppImage`
+- **Windows**: `物流视频管理.exe`
+- **macOS**: `物流视频管理.dmg`
+- **Linux**: `物流视频管理-x86_64.AppImage`
+
+双击运行即可使用！
+
+### 方式二：源码运行
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/czy13724/logistics-video-recorder.git
+cd logistics-video-recorder
+
+# 2. 安装依赖
+pip install -r requirements.txt
+
+# 3. 运行桌面应用
+python run.py
+
+# 或运行Web端
+./start_web.sh  # Mac/Linux
+start_web.bat   # Windows
+```
 
 ## 📦 运行模式
 

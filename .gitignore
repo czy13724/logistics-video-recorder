@@ -8,12 +8,14 @@ venv/
 env/
 ENV/
 
-# Electron
-node_modules/
+# PyInstaller
+build/
 dist/
-out/
-*.log
-npm-debug.log*
+*.spec.backup
+*.exe
+*.app
+*.dmg
+*.AppImage
 
 # 应用数据
 videos/*.mp4
@@ -33,15 +35,10 @@ Thumbs.db
 *.swp
 *.swo
 
-# 构建产物
-build/icon.ico
-build/icon.icns
-build/icon.png
-build/icons/*.png
-
 # 配置
 config.json
 
 # 其他
 *.zip
 *.tar.gz
+

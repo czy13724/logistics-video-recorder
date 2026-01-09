@@ -1,4 +1,4 @@
-name: Build and Release
+name: 构建桌面应用
 
 on:
   push:
@@ -7,128 +7,174 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Windows构建
   build-windows:
     runs-on: windows-latest
     steps:
-      - name: Checkout代码
+      - name: 检出代码
         uses: actions/checkout@v4
-
-      - name: 设置Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
 
       - name: 设置Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: 安装依赖
         run: |
-          npm install
-          pip install -r requirements-web.txt
+          pip install -r requirements.txt
+          pip install pyinstaller
 
       - name: 构建Windows应用
-        run: npm run build:win
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pyinstaller --name="物流视频管理" `
+            --windowed `
+            --onefile `
+            --icon=build/icon.png `
+            --add-data="config.json.example;." `
+            run.py
 
       - name: 上传Windows安装包
         uses: actions/upload-artifact@v4
         with:
-          name: windows-installer
-          path: |
-            dist/*.exe
-            dist/*.msi
+          name: windows-exe
+          path: dist/*.exe
           retention-days: 30
 
-  # macOS构建
   build-macos:
     runs-on: macos-latest
     steps:
-      - name: Checkout代码
+      - name: 检出代码
         uses: actions/checkout@v4
-
-      - name: 设置Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
 
       - name: 设置Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: 安装依赖
         run: |
-          npm install
-          pip install -r requirements-web.txt
+          pip install -r requirements.txt
+          pip install pyinstaller
 
       - name: 构建macOS应用
-        run: npm run build:mac
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pyinstaller --name="物流视频管理" \
+            --windowed \
+            --onefile \
+            --icon=build/icon.png \
+            --add-data="config.json.example:." \
+            run.py
+
+      - name: 创建DMG
+        run: |
+          brew install create-dmg
+          create-dmg \
+            --volname "物流视频管理" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --app-drop-link 600 185 \
+            "物流视频管理.dmg" \
+            "dist/物流视频管理.app" || true
+          
+          # 如果create-dmg失败，手动打包
+          if [ ! -f "物流视频管理.dmg" ]; then
+            hdiutil create -volname "物流视频管理" -srcfolder "dist/物流视频管理.app" -ov -format UDZO "物流视频管理.dmg"
+          fi
 
       - name: 上传macOS安装包
         uses: actions/upload-artifact@v4
         with:
-          name: macos-installer
-          path: |
-            dist/*.dmg
-            dist/*.zip
+          name: macos-dmg
+          path: "*.dmg"
           retention-days: 30
 
-  # Linux构建
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout代码
+      - name: 检出代码
         uses: actions/checkout@v4
-
-      - name: 设置Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
 
       - name: 设置Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
-      - name: 安装依赖
+      - name: 安装系统依赖
         run: |
-          npm install
-          pip install -r requirements-web.txt
+          sudo apt-get update
+          sudo apt-get install -y python3-pyqt6 libxcb-cursor0
+
+      - name: 安装Python依赖
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
 
       - name: 构建Linux应用
-        run: npm run build:linux
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pyinstaller --name="物流视频管理" \
+            --windowed \
+            --onefile \
+            --icon=build/icon.png \
+            --add-data="config.json.example:." \
+            run.py
+
+      - name: 创建AppImage
+        run: |
+          # 下载appimagetool
+          wget -c https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          
+          # 创建AppDir结构
+          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/share/applications
+          mkdir -p AppDir/usr/share/icons/hicolor/512x512/apps
+          
+          # 复制可执行文件
+          cp dist/物流视频管理 AppDir/usr/bin/
+          
+          # 复制图标
+          cp build/icon.png AppDir/usr/share/icons/hicolor/512x512/apps/logistics-video.png
+          cp build/icon.png AppDir/logistics-video.png
+          
+          # 创建desktop文件
+          cat > AppDir/logistics-video.desktop << EOF
+          [Desktop Entry]
+          Name=物流视频管理
+          Exec=物流视频管理
+          Icon=logistics-video
+          Type=Application
+          Categories=Office;
+          EOF
+          
+          cp AppDir/logistics-video.desktop AppDir/usr/share/applications/
+          
+          # 创建AppRun
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/bash
+          SELF=$(readlink -f "$0")
+          HERE=${SELF%/*}
+          export PATH="${HERE}/usr/bin:${PATH}"
+          exec "${HERE}/usr/bin/物流视频管理" "$@"
+          EOF
+          
+          chmod +x AppDir/AppRun
+          
+          # 构建AppImage
+          ./appimagetool-x86_64.AppImage AppDir 物流视频管理-x86_64.AppImage
 
       - name: 上传Linux安装包
         uses: actions/upload-artifact@v4
         with:
-          name: linux-installer
-          path: |
-            dist/*.AppImage
-            dist/*.deb
-            dist/*.rpm
+          name: linux-appimage
+          path: "*.AppImage"
           retention-days: 30
 
-  # 创建GitHub Release
   release:
     needs: [build-windows, build-macos, build-linux]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - name: Checkout代码
+      - name: 检出代码
         uses: actions/checkout@v4
 
       - name: 下载所有构建产物
@@ -140,9 +186,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/windows-installer/*
-            artifacts/macos-installer/*
-            artifacts/linux-installer/*
+            artifacts/windows-exe/*
+            artifacts/macos-dmg/*
+            artifacts/linux-appimage/*
           draft: false
           prerelease: false
           generate_release_notes: true
