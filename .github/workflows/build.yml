@@ -118,55 +118,17 @@ jobs:
             --add-data="config.json.example:." \
             run.py
 
-      - name: 创建AppImage
+      - name: 打包发布文件
         run: |
-          # 下载appimagetool
-          wget -c https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
-          chmod +x appimagetool-x86_64.AppImage
-          
-          # 创建AppDir结构
-          mkdir -p AppDir/usr/bin
-          mkdir -p AppDir/usr/share/applications
-          mkdir -p AppDir/usr/share/icons/hicolor/512x512/apps
-          
-          # 复制可执行文件
-          cp dist/物流视频管理 AppDir/usr/bin/
-          
-          # 复制图标
-          cp build/icon.png AppDir/usr/share/icons/hicolor/512x512/apps/logistics-video.png
-          cp build/icon.png AppDir/logistics-video.png
-          
-          # 创建desktop文件
-          cat > AppDir/logistics-video.desktop << EOF
-          [Desktop Entry]
-          Name=物流视频管理
-          Exec=物流视频管理
-          Icon=logistics-video
-          Type=Application
-          Categories=Office;
-          EOF
-          
-          cp AppDir/logistics-video.desktop AppDir/usr/share/applications/
-          
-          # 创建AppRun
-          cat > AppDir/AppRun << 'EOF'
-          #!/bin/bash
-          SELF=$(readlink -f "$0")
-          HERE=${SELF%/*}
-          export PATH="${HERE}/usr/bin:${PATH}"
-          exec "${HERE}/usr/bin/物流视频管理" "$@"
-          EOF
-          
-          chmod +x AppDir/AppRun
-          
-          # 构建AppImage
-          ./appimagetool-x86_64.AppImage AppDir 物流视频管理-x86_64.AppImage
+          cd dist
+          tar -czf 物流视频管理-linux-x64.tar.gz 物流视频管理
+          cd ..
 
       - name: 上传Linux安装包
         uses: actions/upload-artifact@v4
         with:
-          name: linux-appimage
-          path: "*.AppImage"
+          name: linux-binary
+          path: "dist/*.tar.gz"
           retention-days: 30
 
   release:
@@ -188,7 +150,7 @@ jobs:
           files: |
             artifacts/windows-exe/*
             artifacts/macos-dmg/*
-            artifacts/linux-appimage/*
+            artifacts/linux-binary/*
           draft: false
           prerelease: false
           generate_release_notes: true
