@@ -27,16 +27,30 @@ jobs:
         run: |
           pyinstaller --name="物流视频管理" `
             --windowed `
-            --onefile `
+            --onedir `
             --icon=build/icon.png `
             --add-data="config.json.example;." `
+            --add-data="web;web" `
             run.py
+
+      - name: 创建启动脚本
+        run: |
+          echo '@echo off' > dist/物流视频管理/启动.bat
+          echo 'start "" "%~dp0物流视频管理.exe"' >> dist/物流视频管理/启动.bat
+          echo 'echo 软件已启动，请在打开的窗口中使用' >> dist/物流视频管理/启动.bat
+          echo 'pause' >> dist/物流视频管理/启动.bat
+
+      - name: 打包发布文件
+        run: |
+          cd dist
+          Compress-Archive -Path 物流视频管理 -DestinationPath 物流视频管理-Windows.zip
+          cd ..
 
       - name: 上传Windows安装包
         uses: actions/upload-artifact@v4
         with:
           name: windows-exe
-          path: dist/*.exe
+          path: dist/*.zip
           retention-days: 30
 
   build-macos:
@@ -57,29 +71,29 @@ jobs:
 
       - name: 构建macOS应用
         run: |
-          pyinstaller --name="物流视频管理" \
-            --windowed \
-            --onefile \
-            --icon=build/icon.png \
-            --add-data="config.json.example:." \
-            run.py
+          pyinstaller logistics-video.spec
 
       - name: 创建DMG
         run: |
-          brew install create-dmg
-          create-dmg \
-            --volname "物流视频管理" \
-            --window-pos 200 120 \
-            --window-size 800 400 \
-            --icon-size 100 \
-            --app-drop-link 600 185 \
-            "物流视频管理.dmg" \
-            "dist/物流视频管理.app" || true
+          # 创建临时目录
+          mkdir -p dmg_temp
+          cp -r "dist/物流视频管理.app" dmg_temp/
           
-          # 如果create-dmg失败，手动打包
-          if [ ! -f "物流视频管理.dmg" ]; then
-            hdiutil create -volname "物流视频管理" -srcfolder "dist/物流视频管理.app" -ov -format UDZO "物流视频管理.dmg"
-          fi
+          # 创建说明文件
+          cat > dmg_temp/使用说明.txt << 'EOF'
+          使用方法：
+          1. 将"物流视频管理.app"拖到应用程序文件夹
+          2. 双击运行（首次启动需要10-20秒，请耐心等待）
+          3. 如遇到"无法打开"提示，请：
+             - 打开"系统偏好设置" → "安全性与隐私"
+             - 点击"仍要打开"
+          EOF
+          
+          # 创建DMG
+          hdiutil create -volname "物流视频管理" \
+            -srcfolder dmg_temp \
+            -ov -format UDZO \
+            "物流视频管理-macOS.dmg"
 
       - name: 上传macOS安装包
         uses: actions/upload-artifact@v4
