@@ -4,15 +4,15 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com)
+[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](https://github.com)
 
 ## ✨ 特性
 
 - 📹 **视频录制** - 支持多摄像头，实时预览，自动保存
 - 🌐 **Web管理** - 现代化界面，在线播放，数据可视化  
 - 📱 **PWA移动端** - 可安装到手机，离线访问，原生体验
-- 💻 **桌面应用** - PyQt6原生应用，支持Windows/Mac/Linux
-- 🤖 **自动化构建** - GitHub Actions自动打包所有平台
+- 💻 **桌面应用** - PyQt6原生应用，专为Windows优化
+- 🤖 **自动化构建** - GitHub Actions自动打包
 - 📊 **数据统计** - 图表展示，趋势分析，问题追踪
 - 🎨 **现代化UI** - 深色主题，渐变色彩，流畅动画
 
@@ -20,10 +20,8 @@
 
 ### 方式一：下载安装包（推荐）
 
-从 [Releases](../../releases) 下载对应平台的安装包：
-- **Windows**: `物流视频管理.exe`
-- **macOS**: `物流视频管理.dmg`
-- **Linux**: `物流视频管理-x86_64.AppImage`
+从 [Releases](../../releases) 下载Windows安装包：
+- **Windows**: `物流视频管理.exe` (绿色版/安装版)
 
 双击运行即可使用！
 
@@ -41,7 +39,6 @@ pip install -r requirements.txt
 python run.py
 
 # 或运行Web端
-./start_web.sh  # Mac/Linux
 start_web.bat   # Windows
 ```
 
